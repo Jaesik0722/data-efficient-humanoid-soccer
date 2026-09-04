@@ -1,0 +1,124 @@
+{
+ "video": "localization.mp4",
+ "frame": 200,
+ "field": {
+  "front_right_field_corner": [
+   -1.45,
+   1.85
+  ],
+  "front_right_area_baseline": [
+   -1.0,
+   1.85
+  ],
+  "front_right_area_corner": [
+   -1.0,
+   0.95
+  ],
+  "front_right_goal_post": [
+   -0.65,
+   1.85
+  ],
+  "front_left_goal_post": [
+   0.65,
+   1.85
+  ],
+  "front_left_area_baseline": [
+   1.0,
+   1.85
+  ],
+  "front_left_area_corner": [
+   1.0,
+   0.95
+  ],
+  "front_left_field_corner": [
+   1.5,
+   1.85
+  ],
+  "left_center_junction": [
+   1.5,
+   0.0
+  ],
+  "right_center_junction": [
+   -1.45,
+   0.0
+  ],
+  "field_center": [
+   0.0,
+   0.0
+  ],
+  "back_right_field_corner": [
+   1.5,
+   -1.85
+  ],
+  "back_right_area_baseline": [
+   1.0,
+   -1.85
+  ],
+  "back_right_area_corner": [
+   1.0,
+   -0.95
+  ],
+  "back_right_goal_post": [
+   0.65,
+   -1.85
+  ],
+  "back_left_goal_post": [
+   -0.65,
+   -1.85
+  ],
+  "back_left_area_baseline": [
+   -1.0,
+   -1.85
+  ],
+  "back_left_area_corner": [
+   -1.0,
+   -0.95
+  ],
+  "back_left_field_corner": [
+   -1.45,
+   -1.85
+  ]
+ },
+ "clicks": {
+  "front_left_goal_post": [
+   1617.17,
+   656.17
+  ],
+  "front_left_area_baseline": [
+   1559.33,
+   596.0
+  ],
+  "front_left_area_corner": [
+   1277.67,
+   592.17
+  ],
+  "front_left_field_corner": [
+   1505.67,
+   534.83
+  ],
+  "left_center_junction": [
+   971.67,
+   519.33
+  ],
+  "field_center": [
+   936.83,
+   767.0
+  ],
+  "back_right_field_corner": [
+   487.17,
+   497.5
+  ],
+  "back_right_area_baseline": [
+   424.0,
+   553.83
+  ],
+  "back_right_area_corner": [
+   688.0,
+   567.0
+  ],
+  "back_right_goal_post": [
+   370.17,
+   602.17
+  ]
+ }
+}

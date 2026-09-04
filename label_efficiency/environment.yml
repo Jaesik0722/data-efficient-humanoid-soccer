@@ -1,0 +1,29 @@
+# Conda environment for the label-efficiency study.
+#
+#   conda env create -f environment.yml
+#   conda activate robinion-de
+#   python check_env.py --dataset "/path/to/Localization Dataset"
+#
+# TensorFlow is installed through pip rather than conda: the conda-forge GPU
+# builds lag behind and frequently mismatch the CUDA runtime. The
+# `[and-cuda]` extra pulls the CUDA 12 and cuDNN 8 libraries as pip wheels
+# into the environment, so nothing has to be installed system-wide -- only an
+# NVIDIA driver >= 525.60.13 is required on the host.
+#
+# TF is pinned to 2.15.1 on purpose. From 2.16 onwards `tf.keras` is Keras 3,
+# which changes how a functional model may be re-wrapped around a pretrained
+# backbone; 2.15 is the last release that matches the pattern used by the
+# original training script in the repository.
+name: robinion-de
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - tensorflow[and-cuda]==2.15.1
+      - numpy==1.26.4          # TF 2.15 is not compatible with numpy 2.x
+      - opencv-python-headless==4.10.0.84
+      - matplotlib==3.9.2
