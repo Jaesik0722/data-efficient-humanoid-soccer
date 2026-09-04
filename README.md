@@ -64,8 +64,3 @@ paper's Limitations: the `resize_fix` path in `utils.py`, and a missing `random`
 recording are not redistributed; the recording belongs to a third party. Both are
 available from the corresponding author on request. Neither is needed to reproduce a
 figure — only to retrain or re-annotate.
-
-## Citing and license
-
-See [`CITATION.cff`](CITATION.cff). MIT — see [`LICENSE`](LICENSE); the platform
-repository and the datasets are covered by their own terms.
