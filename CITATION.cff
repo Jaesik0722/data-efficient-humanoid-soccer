@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "Data-Efficient Visual Perception under Edge-Computing Constraints"
+abstract: >-
+  Experiment and analysis code for the label-efficiency study, the Monte Carlo
+  localization evaluation, and the field measurements reported in the paper.
+authors:
+  - family-names: Jeong
+    given-names: Jaesik
+    affiliation: "Department of Artificial Intelligence, Tamkang University"
+  - family-names: Christmann
+    given-names: Guilherme Henrique Galelli
+    affiliation: "Department of Electrical Engineering, National Taiwan Normal University"
+  - family-names: Yang
+    given-names: Jeehyun
+    affiliation: "Department of Industrial Design, Ming Chi University of Technology"
+  - family-names: Hsiao
+    given-names: Chao-Hsiang
+    affiliation: "Department of Artificial Intelligence, Tamkang University"
+  - family-names: Wang
+    given-names: Yin-Tien
+    affiliation: "Department of Artificial Intelligence, Tamkang University"
+license: MIT
+repository-code: "https://github.com/Jaesik0722/data-efficient-humanoid-soccer"
+preferred-citation:
+  type: article
+  title: >-
+    Data-Efficient Visual Perception under Edge-Computing Constraints:
+    Application to Autonomous Localization and Humanoid Robot Soccer
+  authors:
+    - family-names: Jeong
+      given-names: Jaesik
+    - family-names: Christmann
+      given-names: Guilherme Henrique Galelli
+    - family-names: Yang
+      given-names: Jeehyun
+    - family-names: Hsiao
+      given-names: Chao-Hsiang
+    - family-names: Wang
+      given-names: Yin-Tien
+  journal: Electronics
+  year: 2026
+  # TODO: fill in volume, article number and DOI once accepted.

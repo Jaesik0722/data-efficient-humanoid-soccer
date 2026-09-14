@@ -103,7 +103,26 @@ class SoftArgmax2D(keras.layers.Layer):
     log-partition of the same channel, rescaled by a learned per-class affine
     so that it can be trained against a visibility label; this adds 2 scalars
     per class and no spatial parameters.
+
+    `tau` is the temperature of that spatial softmax: it divides the logits
+    before normalisation, so tau < 1 sharpens the distribution towards the
+    arg-max and tau > 1 flattens it towards the grid centre. tau = 1 is the
+    unscaled softmax and reproduces the original runs exactly. The visibility
+    branch deliberately keeps the *unscaled* logits: its learned affine
+    already supplies a scale, and tying it to tau would confound the
+    coordinate decoding with the detection threshold.
     """
+
+    def __init__(self, tau=1.0, **kwargs):
+        super().__init__(**kwargs)
+        if not tau > 0:
+            raise ValueError(f'tau must be positive, got {tau}')
+        self.tau = float(tau)
+
+    def get_config(self):
+        cfg = super().get_config()
+        cfg.update(tau=self.tau)
+        return cfg
 
     def build(self, input_shape):
         c = int(input_shape[-1])
@@ -115,7 +134,7 @@ class SoftArgmax2D(keras.layers.Layer):
     def call(self, logits):
         h, w = int(logits.shape[1]), int(logits.shape[2])
         flat = tf.reshape(logits, (-1, h * w, int(logits.shape[-1])))
-        p = tf.nn.softmax(flat, axis=1)
+        p = tf.nn.softmax(flat / self.tau, axis=1)
 
         ys = (tf.range(h, dtype=tf.float32) + 0.5) / float(h)
         xs = (tf.range(w, dtype=tf.float32) + 0.5) / float(w)
@@ -130,7 +149,7 @@ class SoftArgmax2D(keras.layers.Layer):
         return tf.stack([vis, x, y], axis=-1)
 
 
-def build_softargmax_model():
+def build_softargmax_model(tau=1.0):
     """The intermediate representation: the heatmap decoder of the deployed
     network, but decoded by soft-argmax and supervised on coordinates rather
     than on a synthesised target map. Everything up to the final 1x1
@@ -149,7 +168,7 @@ def build_softargmax_model():
         keras.layers.BatchNormalization(),
         keras.layers.Conv2D(C.N_CLASSES, 1, padding='same'),
     ], name='softargmax_head')
-    return keras.Model(inp, SoftArgmax2D()(head(base.output)),
+    return keras.Model(inp, SoftArgmax2D(tau=tau)(head(base.output)),
                        name='softargmax')
 
 
@@ -166,33 +185,50 @@ def build_coord_model():
     return keras.Model(inp, out, name='coord')
 
 
-def coord_loss(y_true, y_pred):
+COORD_WEIGHT = 5.0   # weight of the coordinate term relative to visibility
+
+
+def coord_loss_fn(w=COORD_WEIGHT):
     """Binary cross-entropy on visibility plus MSE on the coordinates of the
     landmarks that are actually present. Coordinates of absent landmarks carry
-    no information and must not contribute a gradient."""
-    vis_t = y_true[..., 0]
-    vis_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(vis_t, y_pred[..., 0]))
-    xy_err = tf.reduce_sum(tf.square(y_true[..., 1:] - tf.sigmoid(y_pred[..., 1:])),
-                           axis=-1)
-    denom = tf.maximum(tf.reduce_sum(vis_t), 1.0)
-    xy_loss = tf.reduce_sum(xy_err * vis_t) / denom
-    return vis_loss + 5.0 * xy_loss
+    no information and must not contribute a gradient.
+
+    `w` scales the coordinate term. w = 5 is the original setting, shared with
+    `softargmax_loss_fn` so that the two coordinate-supervised heads differ
+    only in how the coordinate is produced."""
+    def loss(y_true, y_pred):
+        vis_t = y_true[..., 0]
+        vis_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(vis_t, y_pred[..., 0]))
+        xy_err = tf.reduce_sum(
+            tf.square(y_true[..., 1:] - tf.sigmoid(y_pred[..., 1:])), axis=-1)
+        denom = tf.maximum(tf.reduce_sum(vis_t), 1.0)
+        xy_loss = tf.reduce_sum(xy_err * vis_t) / denom
+        return vis_loss + w * xy_loss
+    return loss
 
 
-def softargmax_loss(y_true, y_pred):
-    """Identical in form and weighting to `coord_loss`; the only difference is
-    that the soft-argmax already emits coordinates in [0, 1], so no squashing
-    is applied. Keeping the loss the same is what makes the comparison between
-    the two heads a comparison of representations."""
-    vis_t = y_true[..., 0]
-    vis_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(vis_t, y_pred[..., 0]))
-    xy_err = tf.reduce_sum(tf.square(y_true[..., 1:] - y_pred[..., 1:]),
-                           axis=-1)
-    denom = tf.maximum(tf.reduce_sum(vis_t), 1.0)
-    xy_loss = tf.reduce_sum(xy_err * vis_t) / denom
-    return vis_loss + 5.0 * xy_loss
+def softargmax_loss_fn(w=COORD_WEIGHT):
+    """Identical in form and weighting to `coord_loss_fn`; the only difference
+    is that the soft-argmax already emits coordinates in [0, 1], so no
+    squashing is applied. Keeping the loss the same is what makes the
+    comparison between the two heads a comparison of representations."""
+    def loss(y_true, y_pred):
+        vis_t = y_true[..., 0]
+        vis_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(vis_t, y_pred[..., 0]))
+        xy_err = tf.reduce_sum(tf.square(y_true[..., 1:] - y_pred[..., 1:]),
+                               axis=-1)
+        denom = tf.maximum(tf.reduce_sum(vis_t), 1.0)
+        xy_loss = tf.reduce_sum(xy_err * vis_t) / denom
+        return vis_loss + w * xy_loss
+    return loss
+
+
+# The original fixed-weight losses, kept under their old names so that
+# existing callers (tune_lr.py) and the 36 runs already in runs/ stay valid.
+coord_loss = coord_loss_fn()
+softargmax_loss = softargmax_loss_fn()
 
 
 # ---------------------------------------------------------------- data
@@ -322,12 +358,22 @@ def main():
     ap.add_argument('--no-cosine', dest='cosine', action='store_false')
     ap.add_argument('--pos-weight', type=float, default=100.0,
                     help='alpha in the 1 + alpha*target loss weighting')
+    ap.add_argument('--tau', type=float, default=1.0,
+                    help='softargmax only: temperature of the spatial '
+                         'softmax. 1.0 is the unscaled softmax of the '
+                         'original runs; below 1 sharpens, above 1 flattens')
+    ap.add_argument('--coord-weight', type=float, default=COORD_WEIGHT,
+                    help='softargmax and coord only: weight of the coordinate '
+                         'term relative to visibility (original: 5)')
     ap.add_argument('--eval-every', type=int, default=200)
     ap.add_argument('--patience', type=int, default=10,
                     help='evaluations without improvement before stopping')
     ap.add_argument('--flip', action='store_true',
                     help='mirror augmentation with left/right class swap')
     ap.add_argument('--outdir', default='runs')
+    ap.add_argument('--save-model', default=None,
+                    help='write the trained Keras model here (needed for the '
+                         'int8 quantization comparison of quantize_eval.py)')
     ap.add_argument('--tf-verbose', type=int, default=1, choices=[0, 1, 2],
                     help="Keras progress bar: 1 shows it, 0 is silent. Leave "
                          "at 1 for the first run so you can see it is alive")
@@ -343,6 +389,15 @@ def main():
     train_paths = sp['subsets'][a.fraction]
 
     tag = f'{a.head}_f{a.fraction}_s{a.seed}'
+    # Non-default tau / coordinate weight get their own filename, so a tuning
+    # sweep never overwrites one of the 36 runs of the main study and
+    # run_all.sh's skip-if-present logic keeps working unchanged.
+    if a.head == 'softargmax' and a.tau != 1.0:
+        tag += f'_t{a.tau:g}'
+    if a.head in ('softargmax', 'coord') and a.coord_weight != COORD_WEIGHT:
+        tag += f'_w{a.coord_weight:g}'
+    if a.lr != 1e-3:
+        tag += f'_lr{a.lr:g}'
     os.makedirs(a.outdir, exist_ok=True)
     print(f'[{tag}] train {len(train_paths)}  val {len(sp["val"])}  '
           f'test {len(sp["test"])}')
@@ -355,11 +410,11 @@ def main():
           f'weights once, then caches them)', flush=True)
 
     builders = {'heatmap': build_heatmap_model,
-                'softargmax': build_softargmax_model,
+                'softargmax': lambda: build_softargmax_model(a.tau),
                 'coord': build_coord_model}
     losses = {'heatmap': lambda: heatmap_loss(a.pos_weight),
-              'softargmax': lambda: softargmax_loss,
-              'coord': lambda: coord_loss}
+              'softargmax': lambda: softargmax_loss_fn(a.coord_weight),
+              'coord': lambda: coord_loss_fn(a.coord_weight)}
     model = builders[a.head]()
     loss = losses[a.head]()
     sched = keras.optimizers.schedules.CosineDecay(a.lr, a.steps) \
@@ -415,7 +470,12 @@ def main():
                best_val_loss=best, train_seconds=train_time,
                flip=a.flip, lr=a.lr, batch=a.batch, cosine=a.cosine,
                pos_weight=a.pos_weight, loss='weighted_bce_logits',
+               tau=a.tau, coord_weight=a.coord_weight,
                test_sessions=sp['test_sessions'], history=history, results=res)
+    if a.save_model:
+        model.save(a.save_model)
+        print(f'[{tag}] saved model -> {a.save_model}')
+
     path = os.path.join(a.outdir, tag + '.json')
     with open(path, 'w') as fh:
         json.dump(rec, fh, indent=1)

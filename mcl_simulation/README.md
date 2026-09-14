@@ -56,7 +56,44 @@ Six families, six seeds; results land in `parts/`. Roughly a minute per run.
 | `rate` | filter update rate | 8(b) |
 | `kidnap` | recovery from a kidnapped-robot event | 8(c) |
 
-`part_*.json` in `results/` are the noise and particle-count sweeps behind Figure 6.
+## Figure 6
+
+```bash
+cd results && python3 ../make_fig_loc_sim.py
+```
+
+Reads `noise_*.json`, `part_*.json` and `traj_*.json` for the accuracy panels, and
+`timing_nuc8i7beh.json` for the per-update times in panel (b).
+
+## Per-update timing
+
+Accuracy is machine-independent here — the seeds are fixed, so a run reproduces anywhere.
+The per-update time is not, and the paper reports it as evidence that the filter is
+affordable next to two Edge TPU inferences **on the robot**. That claim is about the
+robot's onboard computer, so the measurement is taken there:
+
+```bash
+export ROBINION_REPO=/path/to/ros-robinion2
+python3 time_onboard.py --tag nuc8i7beh          # on the robot
+python3 time_onboard.py --tag host-i7-9750H      # desktop, for comparison
+```
+
+Both files are in `results/`. Five particle counts, six seeds, σ = 0.1 m, 69°, 20 Hz.
+
+| N | desktop i7-9750H | onboard i7-8559U |
+|---:|---:|---:|
+| 500 | 2.18 ± 0.30 | 2.64 ± 0.44 |
+| 5,000 | 4.51 ± 0.47 | 4.50 ± 0.54 |
+| 10,000 | 6.67 ± 0.52 | 6.55 ± 0.61 |
+
+The two machines are indistinguishable at the particle counts that matter, so the cost of
+the filter does not depend on which of them runs it.
+
+**These times are higher than the `ms` fields stored in `part_*.json` and `parts/rate_*.json`,
+by roughly half.** Those were recorded on the desktop machine at an earlier date, under a
+Python and numpy build that is no longer reconstructible, and the script that produced
+`part_*.json` was not kept. The figures reported in the paper are the ones measured with
+`time_onboard.py`, which ships here and can be re-run on either machine.
 
 ## Note on the platform code
 

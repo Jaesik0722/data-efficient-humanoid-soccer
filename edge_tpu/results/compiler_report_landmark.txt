@@ -1,0 +1,26 @@
+Edge TPU Compiler version 16.0.384591198
+
+Input model: model_1000_epochs_quant.tflite
+Input size: 2.80MiB
+Output model: model_1000_epochs_quant_edgetpu.tflite
+Output size: 2.87MiB
+On-chip memory used for caching model parameters: 2.77MiB
+On-chip memory remaining for caching model parameters: 4.36MiB
+Off-chip memory used for streaming uncached model parameters: 5.00KiB
+Number of Edge TPU subgraphs: 1
+Total number of operations: 84
+
+Operator                       Count      Status
+PAD                            5          Mapped to Edge TPU
+ADD                            13         Mapped to Edge TPU
+RESIZE_BILINEAR                3          Mapped to Edge TPU
+QUANTIZE                       2          Mapped to Edge TPU
+MUL                            3          Mapped to Edge TPU
+DEPTHWISE_CONV_2D              17         Mapped to Edge TPU
+CONV_2D                        40         Mapped to Edge TPU
+LOGISTIC                       1          Mapped to Edge TPU
+
+Note: this is the verbatim report behind Section 4.1.1. No operation falls back
+to the CPU. The ball detector's report could not be obtained: the deployed
+.tflite is already compiled, its float32 source cannot be compiled, and the
+TFLite interpreter segfaults on that file.

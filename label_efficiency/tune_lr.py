@@ -41,12 +41,17 @@ def zeros_baseline(paths, limit=400):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--splits', required=True)
-    ap.add_argument('--head', choices=['heatmap', 'coord'], default='heatmap')
+    ap.add_argument('--head', choices=['heatmap', 'softargmax', 'coord'],
+                    default='heatmap')
     ap.add_argument('--fraction', default='100')
     ap.add_argument('--steps', type=int, default=800)
     ap.add_argument('--batch', type=int, default=16)
     ap.add_argument('--lrs', default='3e-4,1e-3,3e-3')
     ap.add_argument('--pos-weight', type=float, default=100.0)
+    ap.add_argument('--tau', type=float, default=1.0,
+                    help='softargmax only: spatial-softmax temperature')
+    ap.add_argument('--coord-weight', type=float, default=T.COORD_WEIGHT,
+                    help='softargmax and coord only: coordinate-term weight')
     ap.add_argument('--cosine', action='store_true',
                     help='decay the rate to zero over the budget')
     ap.add_argument('--out', default='lr_probe.json')
@@ -59,7 +64,13 @@ def main():
     train_paths = sp['subsets'][a.fraction]
     base = zeros_baseline(train_paths)
     print(f'all-zeros baseline (val MSE of a useless model): {base:.6f}')
-    print(f'initialisation      (sigmoid outputs 0.5)      : 0.250000\n')
+    print(f'initialisation      (sigmoid outputs 0.5)      : 0.250000')
+    if a.head != 'heatmap':
+        print('  (that baseline describes the heatmap target; for this head '
+              'the verdict below rests on accuracy, not on the loss)')
+    if a.head == 'softargmax':
+        print(f'  tau {a.tau:g}, coordinate weight {a.coord_weight:g}')
+    print()
 
     xtr, ytr, _ = T.load_pairs(train_paths, a.head)
     xva, yva, lva = T.load_pairs(sp['val'], a.head)
@@ -68,14 +79,16 @@ def main():
     results = []
     for lr in [float(v) for v in a.lrs.split(',')]:
         tf.keras.utils.set_random_seed(0)
-        model = (T.build_heatmap_model() if a.head == 'heatmap'
-                 else T.build_coord_model())
+        model = {'heatmap': T.build_heatmap_model,
+                 'softargmax': lambda: T.build_softargmax_model(a.tau),
+                 'coord': T.build_coord_model}[a.head]()
         sched = keras.optimizers.schedules.CosineDecay(lr, a.steps) \
             if a.cosine else lr
         model.compile(
             optimizer=keras.optimizers.Adam(sched, clipnorm=1.0),
-            loss=(T.heatmap_loss(a.pos_weight) if a.head == 'heatmap'
-                  else T.coord_loss))
+            loss={'heatmap': lambda: T.heatmap_loss(a.pos_weight),
+                  'softargmax': lambda: T.softargmax_loss_fn(a.coord_weight),
+                  'coord': lambda: T.coord_loss_fn(a.coord_weight)}[a.head]())
         ds = T.make_ds(xtr, ytr, a.head, a.batch, True, False, 0)
 
         t0 = time.time()
@@ -114,7 +127,8 @@ def main():
                             mean_px=ev['mean_px']))
 
     json.dump(dict(head=a.head, fraction=a.fraction, steps=a.steps,
-                   cosine=a.cosine, zeros_baseline=base, results=results),
+                   cosine=a.cosine, zeros_baseline=base,
+                   tau=a.tau, coord_weight=a.coord_weight, results=results),
               open(a.out, 'w'), indent=1)
 
     best = max(results, key=lambda r: (r['pck10'] or 0))
