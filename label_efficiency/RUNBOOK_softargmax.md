@@ -56,27 +56,6 @@ test sessions ['Dataset4', 'Dataset1_Jeehyun']
 하나라도 다르면 데이터셋 폴더가 그때와 달라진 것입니다. 그 상태로 돌리면
 새 결과를 기존 36회와 같은 표에 놓을 수 없습니다.
 
-### 함정: splits.json의 상대 경로
-
-`build_splits`는 `root`만 절대경로로 저장하고 **파일 경로는 `--dataset`에 넘긴
-문자열 그대로** 씁니다. 처음 `--dataset ../Dataset`으로 만드셨다면 그 상대 경로가
-해석되는 디렉터리에서만 동작하고, 저장소를 다른 기계로 옮기면 이렇게 죽습니다:
-
-```
-can't open/read file: check file path/integrity
-ValueError: need at least one array to stack
-```
-
-가장 안전한 해결은 심볼릭 링크입니다 — `splits.json`을 한 글자도 안 건드리므로
-기존 36회와 같은 분할이 보장됩니다.
-
-```bash
-ln -s /실제/경로/Dataset ../Dataset
-```
-
-다시 만드는 쪽을 택하면 위의 개수 확인을 반드시 거치세요.
-
-
 ---
 
 ## 1단계 — lr probe (약 10분)
@@ -102,42 +81,6 @@ heatmap·coord가 받았던 것과 **완전히 같은 프로토콜**입니다: 3
   약 5시간입니다. 이 경우 2단계도 하는 편이 좋습니다.
 
 `lr_probe_softargmax.json`을 보내주시면 곡선을 읽고 어느 쪽인지 판단해 드리겠습니다.
-
----
-
-## 1.5단계 — τ probe (약 10분)
-
-전체 그리드를 돌릴지 말지를 15분 안에 근거 위에서 결정하는 단계입니다.
-`runs/`의 soft-argmax는 median 오차가 라벨 25%에서 13.0 px, 100%에서 13.1 px로
-**완전히 고정**돼 있습니다. 데이터가 부족해서 생기는 패턴이 아니라 디코딩에
-체계적 편향이 있을 때 나오는 패턴이고, 스케일 안 된 spatial softmax가 만드는
-수축이 정확히 그것입니다. τ가 그 수축을 직접 제어합니다.
-
-τ=1·lr=1e-3은 1단계 결과에 이미 들어 있으므로 **두 번만** 돌리면 됩니다.
-
-```bash
-python3 tune_lr.py --splits splits.json --head softargmax \
-        --lrs 1e-3 --tau 0.5 --steps 800 --out probe_tau0.5.json
-python3 tune_lr.py --splits splits.json --head softargmax \
-        --lrs 1e-3 --tau 2.0 --steps 800 --out probe_tau2.0.json
-
-python3 read_probe.py
-```
-
-`tune_lr.py`는 rate마다 `set_random_seed(0)`을 다시 호출하므로 별도 실행분과
-1단계의 lr=1e-3 행은 그대로 비교할 수 있습니다.
-
-**PCK가 아니라 mean px를 보세요.** 800 steps는 짧은 예산이라 절대값은 6000-step
-결과보다 훨씬 나쁩니다 — 상대 비교만 의미가 있습니다.
-
-| τ=0.5의 mean px | 판단 |
-|---|---|
-| τ=1보다 2 px 이상 개선 | 2단계 그리드를 도세요. 리뷰어도 같은 걸 찾습니다 |
-| 거의 변화 없음 | 그리드 생략. **음성 결과를 원고에 쓰세요** — "τ ∈ {0.5, 1, 2}를 짧은 예산으로 확인했으나 국소화 오차가 개선되지 않았다"가 침묵보다 훨씬 강합니다 |
-
-이 probe는 리뷰 지적 1번(튜닝 공정성)과 4번(background probability mass 설명이
-관찰보다 강하다)을 동시에 건드립니다 — 원고 pp.15–16의 그 설명에 대한 직접적인
-검정이기 때문입니다.
 
 ---
 
@@ -242,7 +185,6 @@ python3 de_train.py --splits splits.json --head softargmax --fraction 10 \
 ## 보내주실 것
 
 - 1단계: `lr_probe_softargmax.json`
-- 1.5단계: `probe_tau0.5.json`, `probe_tau2.0.json`
 - 2단계: `runs/softargmax_*_t*.json`, `runs/softargmax_*_w*.json` (수십 KB)
 
 받으면 집계표, figure, §5.1 대체 문단까지 작성하겠습니다.

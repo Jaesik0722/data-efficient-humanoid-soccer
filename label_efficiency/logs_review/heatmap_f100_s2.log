@@ -1,0 +1,64 @@
+2026-10-05 10:59:58.839546: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-10-05 10:59:58.839577: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-10-05 10:59:58.840697: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-10-05 10:59:58.846191: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-10-05 10:59:59.472640: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2026-10-05 11:00:00.112190: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:00.148172: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:00.149887: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+[heatmap_f100_s2] train 1193  val 211  test 492
+[heatmap_f100_s2] reading images...
+[heatmap_f100_s2] building model (first run downloads the 9.4 MB ImageNet weights once, then caches them)
+2026-10-05 11:00:06.908034: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:06.911477: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:06.914003: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:07.055649: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:07.056820: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:07.057907: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 11:00:07.058971: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1929] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 6531 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2070, pci bus id: 0000:01:00.0, compute capability: 7.5
+WARNING:tensorflow:`input_shape` is undefined or non-square, or `rows` is not in [96, 128, 160, 192, 224]. Weights for input shape (224, 224) will be loaded as the default.
+2026-10-05 11:00:08.241541: I external/local_tsl/tsl/platform/default/subprocess.cc:304] Start cannot spawn child process: No such file or directory
+[heatmap_f100_s2] training: 6000 steps, evaluating every 200. The first chunk also traces the graph, so it is slower than the rest.
+2026-10-05 11:00:20.547424: I external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:454] Loaded cuDNN version 8904
+2026-10-05 11:00:20.651321: I external/local_tsl/tsl/platform/default/subprocess.cc:304] Start cannot spawn child process: No such file or directory
+2026-10-05 11:00:22.571853: I external/local_xla/xla/service/service.cc:168] XLA service 0x709a88143140 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2026-10-05 11:00:22.571878: I external/local_xla/xla/service/service.cc:176]   StreamExecutor device (0): NVIDIA GeForce RTX 2070, Compute Capability 7.5
+2026-10-05 11:00:22.576228: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:269] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1791169222.645550  581229 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+[heatmap_f100_s2] 5.6 steps/s -> about 18 min for this run
+[heatmap_f100_s2] step   200/6000  val 0.21447  *
+[heatmap_f100_s2] step   400/6000  val 0.19990  *
+[heatmap_f100_s2] step   600/6000  val 0.14893  *
+[heatmap_f100_s2] step   800/6000  val 0.13554  *
+[heatmap_f100_s2] step  1000/6000  val 0.12365  *
+[heatmap_f100_s2] step  1200/6000  val 0.11573  *
+[heatmap_f100_s2] step  1400/6000  val 0.10450  *
+[heatmap_f100_s2] step  1600/6000  val 0.09069  *
+[heatmap_f100_s2] step  1800/6000  val 0.08219  *
+[heatmap_f100_s2] step  2000/6000  val 0.07759  *
+[heatmap_f100_s2] step  2200/6000  val 0.07486  *
+[heatmap_f100_s2] step  2400/6000  val 0.07214  *
+[heatmap_f100_s2] step  2600/6000  val 0.07624
+[heatmap_f100_s2] step  2800/6000  val 0.07123  *
+[heatmap_f100_s2] step  3000/6000  val 0.07000  *
+[heatmap_f100_s2] step  3200/6000  val 0.06918  *
+[heatmap_f100_s2] step  3400/6000  val 0.06833  *
+[heatmap_f100_s2] step  3600/6000  val 0.06818  *
+[heatmap_f100_s2] step  3800/6000  val 0.06802  *
+[heatmap_f100_s2] step  4000/6000  val 0.06784  *
+[heatmap_f100_s2] step  4200/6000  val 0.06764  *
+[heatmap_f100_s2] step  4400/6000  val 0.06754  *
+[heatmap_f100_s2] step  4600/6000  val 0.06776
+[heatmap_f100_s2] step  4800/6000  val 0.06756
+[heatmap_f100_s2] step  5000/6000  val 0.06750  *
+[heatmap_f100_s2] step  5200/6000  val 0.06755
+[heatmap_f100_s2] step  5400/6000  val 0.06759
+[heatmap_f100_s2] step  5600/6000  val 0.06760
+[heatmap_f100_s2] step  5800/6000  val 0.06759
+[heatmap_f100_s2] step  6000/6000  val 0.06758
+[heatmap_f100_s2]  val: recall 0.994  mean 3.65 px  PCK@10 0.948  PCK@20 0.989
+[heatmap_f100_s2] test: recall 0.816  mean 10.28 px  PCK@10 0.571  PCK@20 0.763
+[heatmap_f100_s2] saved model -> models/heatmap_f100_s2.keras
+[heatmap_f100_s2] saved runs_review/heatmap_f100_s2.json  (6.2 min)

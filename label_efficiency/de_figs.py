@@ -39,12 +39,6 @@ def collect(runs_dir, split='test'):
         for k in ('pck5', 'pck10', 'pck20', 'mean_px', 'median_px', 'recall'):
             if o.get(k) is not None:
                 d[k].append(o[k])
-        # Precision is not stored directly: it is the fraction of emitted
-        # instances that matched a ground-truth landmark of the same class.
-        if o.get('n_det') is not None and o.get('n_fp') is not None:
-            denom = o['n_det'] + o['n_fp']
-            if denom:
-                d['precision'].append(o['n_det'] / denom)
         d['_seeds'].append(r['seed'])
         n_train[r['fraction']] = r['n_train']
     return data, n_train
@@ -145,14 +139,9 @@ def main():
     for x, lo, hi in zip(xs, m_out, m_in):
         ax.annotate(f'{hi - lo:+.2f}', (x, (lo + hi) / 2), fontsize=7,
                     ha='center', va='center', color='#444444')
-    # The panel plots one head; the summary records all three, because the
-    # paper quotes the gap of the two baselines at the full budget as well.
-    summary['generalization_gap'] = dict(plotted_head=head, n_labels=xs)
-    for h in heads:
-        i = np.array([ms(data_o[h][f]['pck10'])[0] for f in fracs])
-        t = np.array([ms(data[h][f]['pck10'])[0] for f in fracs])
-        summary['generalization_gap'][h] = dict(
-            inside=list(i), outside=list(t), gap=list(i - t))
+    summary['generalization_gap'] = dict(
+        head=head, n_labels=xs, inside=list(m_in), outside=list(m_out),
+        gap=list(m_in - m_out))
     ax.set_xlabel('Labeled training images')
     ax.set_ylabel(f'PCK@10 px, {HEAD_LABEL[head].split(" (")[0].lower()}')
     ax.set_xscale('log')
@@ -173,13 +162,10 @@ def main():
     lines = [
         r'\begin{table}[H]', r'\caption{Landmark detection accuracy on the '
         r'held-out sessions as a function of the number of labeled training '
-        r'images. Mean $\pm$ sample standard deviation over three seeds. '
-        r'Recall is over landmark instances present in the frame, precision '
-        r'over emitted instances.'
+        r'images. Mean $\pm$ standard deviation over three seeds.'
         r'\label{tab:label_efficiency}}',
-        r'\begin{tabularx}{\textwidth}{lCCCCCC}', r'\toprule',
+        r'\begin{tabularx}{\textwidth}{lCCCCC}', r'\toprule',
         r'\textbf{Head} & \textbf{Labels} & \textbf{Recall} & '
-        r'\textbf{Precision} & '
         r'\textbf{Mean err.\ (px)} & \textbf{PCK@10} & \textbf{PCK@20} \\',
         r'\midrule']
     for head in heads:
@@ -187,7 +173,7 @@ def main():
             d = data[head][f]
             row = [HEAD_LABEL[head] if j == 0 else '',
                    f'{n_train[f]} ({f}\\%)']
-            for k in ('recall', 'precision', 'mean_px', 'pck10', 'pck20'):
+            for k in ('recall', 'mean_px', 'pck10', 'pck20'):
                 mu, sd = ms(d[k])
                 fmt = '{:.2f} $\\pm$ {:.2f}' if k == 'mean_px' \
                     else '{:.3f} $\\pm$ {:.3f}'
